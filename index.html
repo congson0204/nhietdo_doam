@@ -211,6 +211,7 @@
    const temperature=document.getElementById("tempValue");
    const humidity= document.getElementById("humidityValue");
     const button=document.getElementById("statusText");
+    const btn = document.getElementById("toggleBtn");
  
     let configTemp = null, configHumi = null, configButton=null,actions=[],
     const eraWidget = new EraWidget();
@@ -245,6 +246,21 @@
         temperature.innerHTML = valueTemp + ' °C';  // Hiển thị nhiệt độ
         humidity.innerHTML = valueHumi + ' %';  // Hiển thị độ ẩm
 
+
+        /////
+
+
+         btn.addEventListener("click", () => {
+      isOn = !isOn;
+
+      if (isOn) {
+        eraWidget.triggerAction(actions[0]?.action, null);  // Kích hoạt hành động "Bật đèn"
+      } else {
+       eraWidget.triggerAction(actions[1]?.action, null);  // Kích hoạt hành động "Bật đèn"
+      }
+
+    });
+        ////
       
       },
     });
