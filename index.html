@@ -83,7 +83,6 @@
       margin-top: 16px;
     }
 
-    /* BUTTON */
     .control-section {
       margin-top: 20px;
     }
@@ -121,27 +120,22 @@
     }
   </style>
 </head>
-
 <body>
-
   <div class="container">
     <div class="header">Device Status</div>
 
-    <!-- Temperature -->
     <div class="section">
       <div class="icon">🌡️</div>
       <div class="temperature" id="tempValue">23.8°C</div>
     </div>
     <div class="label">Temperature</div>
 
-    <!-- Humidity -->
     <div class="section">
       <div class="icon">💧</div>
       <div class="humidity" id="humidityValue">68.6%</div>
     </div>
     <div class="label">Humidity</div>
 
-    <!-- BUTTON -->
     <div class="control-section">
       <button id="toggleBtn" class="toggle-btn off">OFF</button>
       <div class="status-text" id="statusText">Device is OFF</div>
@@ -150,121 +144,92 @@
     <div class="footer" id="lastUpdated">Last updated: --</div>
   </div>
 
-  <script>
-    // ===== Update Sensor =====
-    function updateDisplay(temp, humidity) {
-      document.getElementById("tempValue").textContent = temp.toFixed(1) + "°C";
-      document.getElementById("humidityValue").textContent = humidity.toFixed(1) + "%";
+  <script src="https://www.unpkg.com/@eohjsc/era-widget@1.1.3/src/index.js"></script>
 
+  <script>
+    const temperatureEl = document.getElementById("tempValue");
+    const humidityEl = document.getElementById("humidityValue");
+    const statusTextEl = document.getElementById("statusText");
+    const btn = document.getElementById("toggleBtn");
+    const lastUpdatedEl = document.getElementById("lastUpdated");
+
+    let isOn = false;
+    let configTemp = null;
+    let configHumi = null;
+    let actions = [];
+
+    function updateTime() {
       const now = new Date();
       const time = now.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
+        hour: "2-digit",
+        minute: "2-digit"
       });
-
-      document.getElementById("lastUpdated").textContent =
-        "Last updated: " + time;
+      lastUpdatedEl.textContent = "Last updated: " + time;
     }
 
-    // Demo data (giả lập cảm biến)
-    setInterval(() => {
-      const temp = 22 + Math.random() * 5;
-      const humidity = 60 + Math.random() * 15;
-      updateDisplay(temp, humidity);
-    }, 3000);
-
-    // ===== ON/OFF BUTTON =====
-    let isOn = false;
-
-    const btn = document.getElementById("toggleBtn");
-    const statusText = document.getElementById("statusText");
-
-    btn.addEventListener("click", () => {
-      isOn = !isOn;
-
+    function updateButtonUI() {
       if (isOn) {
         btn.textContent = "ON";
         btn.classList.remove("off");
         btn.classList.add("on");
-        statusText.textContent = "Device is ON";
+        statusTextEl.textContent = "Device is ON";
       } else {
         btn.textContent = "OFF";
         btn.classList.remove("on");
         btn.classList.add("off");
-        statusText.textContent = "Device is OFF";
+        statusTextEl.textContent = "Device is OFF";
+      }
+    }
+
+    updateButtonUI();
+
+    btn.addEventListener("click", () => {
+      isOn = !isOn;
+      updateButtonUI();
+
+      if (actions.length >= 2) {
+        if (isOn) {
+          eraWidget.triggerAction(actions[0]?.action, null);
+        } else {
+          eraWidget.triggerAction(actions[1]?.action, null);
+        }
       }
 
       console.log("Device:", isOn ? "ON" : "OFF");
-
-      // 👉 Nếu dùng ESP32 → gửi API ở đây
-      // fetch("/control?state=" + (isOn ? "1" : "0"));
     });
-  </script>
 
-</body>
-</html>
- <script src="https://www.unpkg.com/@eohjsc/era-widget@1.1.3/src/index.js"></script>
-  <script>
-    // Example: update values dynamically
-    
-
-   const temperature=document.getElementById("tempValue");
-   const humidity= document.getElementById("humidityValue");
-    const button=document.getElementById("statusText");
-    const btn = document.getElementById("toggleBtn");
- 
-    let configTemp = null, configHumi = null, configButton=null,actions=[],
     const eraWidget = new EraWidget();
     eraWidget.init({
-      needRealtimeConfigs: true,         /* Cần giá trị hiện thời */
-      needHistoryConfigs: true,          /* Cần giá trị lịch sử */
-      needActions: true,                 /* Cần các hành động (ví dụ Bật/Tắt đèn) */
-      maxRealtimeConfigsCount: 3,        /* Số lượng tối đa giá trị hiện thời */
-      maxHistoryConfigsCount: 1,         /* Số lượng tối đa giá trị lịch sử */
-      maxActionsCount: 2,                /* Số lượng tối đa các hành động có thể kích hoạt */
-      minRealtimeConfigsCount: 0,        /* Số lượng tối thiểu giá trị hiện thời */
-      minHistoryConfigsCount: 0,         /* Số lượng tối thiểu giá trị lịch sử */
-      minActionsCount: 0,                /* Số lượng tối thiểu hành động */
+      needRealtimeConfigs: true,
+      needHistoryConfigs: true,
+      needActions: true,
+      maxRealtimeConfigsCount: 3,
+      maxHistoryConfigsCount: 1,
+      maxActionsCount: 2,
+      minRealtimeConfigsCount: 0,
+      minHistoryConfigsCount: 0,
+      minActionsCount: 0,
 
-      /* Hàm callback được gọi khi có cấu hình được nhận từ server */
       onConfiguration: (configuration) => {
-        // Lưu các cấu hình khi nhận được từ widget
-        configTemp = configuration.realtime_configs[0];  // Lưu cấu hình nhiệt độ
-        configHumi = configuration.realtime_configs[1];  // Lưu cấu hình độ ẩm
-        configButton=configuration.actions;
-      
+        configTemp = configuration.realtime_configs?.[0] || null;
+        configHumi = configuration.realtime_configs?.[1] || null;
+        actions = configuration.actions || [];
       },
 
-      /* Hàm callback được gọi khi nhận giá trị mới từ server */
       onValues: (values) => {
-        // Cập nhật giá trị nhận được từ widget
-        const valueTemp = values[configTemp.id].value;  // Giá trị nhiệt độ
-        const valueHumi = values[configHumi.id].value;  // Giá trị độ ẩm
-        
+        if (configTemp && values[configTemp.id]) {
+          const valueTemp = values[configTemp.id].value;
+          temperatureEl.textContent = valueTemp + " °C";
+        }
 
-        // Cập nhật giao diện người dùng với giá trị mới
-        temperature.innerHTML = valueTemp + ' °C';  // Hiển thị nhiệt độ
-        humidity.innerHTML = valueHumi + ' %';  // Hiển thị độ ẩm
+        if (configHumi && values[configHumi.id]) {
+          const valueHumi = values[configHumi.id].value;
+          humidityEl.textContent = valueHumi + " %";
+        }
 
-
-        /////
-
-
-         btn.addEventListener("click", () => {
-      isOn = !isOn;
-
-      if (isOn) {
-        eraWidget.triggerAction(actions[0]?.action, null);  // Kích hoạt hành động "Bật đèn"
-      } else {
-       eraWidget.triggerAction(actions[1]?.action, null);  // Kích hoạt hành động "Bật đèn"
+        updateTime();
       }
-
     });
-        ////
-      
-      },
-    });
-    
   </script>
 </body>
 </html>
