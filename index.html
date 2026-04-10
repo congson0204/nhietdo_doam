@@ -208,10 +208,11 @@
     // Example: update values dynamically
     
 
-    const temperature=document.getElementById("tempValue");
+   const temperature=document.getElementById("tempValue");
    const humidity= document.getElementById("humidityValue");
+    const button=document.getElementById("statusText");
  
-    let configTemp = null, configHumi = null
+    let configTemp = null, configHumi = null, configButton=null,actions=[],
     const eraWidget = new EraWidget();
     eraWidget.init({
       needRealtimeConfigs: true,         /* Cần giá trị hiện thời */
@@ -229,6 +230,7 @@
         // Lưu các cấu hình khi nhận được từ widget
         configTemp = configuration.realtime_configs[0];  // Lưu cấu hình nhiệt độ
         configHumi = configuration.realtime_configs[1];  // Lưu cấu hình độ ẩm
+        configButton=configuration.actions;
       
       },
 
@@ -237,7 +239,7 @@
         // Cập nhật giá trị nhận được từ widget
         const valueTemp = values[configTemp.id].value;  // Giá trị nhiệt độ
         const valueHumi = values[configHumi.id].value;  // Giá trị độ ẩm
-      
+        
 
         // Cập nhật giao diện người dùng với giá trị mới
         temperature.innerHTML = valueTemp + ' °C';  // Hiển thị nhiệt độ
